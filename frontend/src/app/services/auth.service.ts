@@ -1,17 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private base = 'http://localhost:8081/api/auth';
-  constructor(private http: HttpClient) {}
+  private loggedIn = new BehaviorSubject<boolean>(!!this.getToken());
+  public isLoggedIn$: Observable<boolean> = this.loggedIn.asObservable();
+
+  constructor(private http: HttpClient, private router: Router) {}
 
   register(body: any) { return this.http.post<any>(`${this.base}/register`, body); }
   login(body: any) { return this.http.post<any>(`${this.base}/login`, body); }
 
-  setToken(token: string) { localStorage.setItem('token', token); }
+  setToken(token: string) {
+      localStorage.setItem('token', token);
+      this.loggedIn.next(true);
+  }
   getToken(): string | null { return localStorage.getItem('token'); }
-  logout() { localStorage.removeItem('token'); }
+  logout() {
+      localStorage.removeItem('token');
+      this.loggedIn.next(false);
+      this.router.navigate(['/login']);
+  }
 
   isSeller(): boolean {
     const token = this.getToken();
