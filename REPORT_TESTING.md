@@ -421,6 +421,49 @@ I added a minimal local-HTTPS integration that terminates TLS using an nginx rev
 
 If you prefer Traefik or a different TLS setup, I can add a production-ready example as well.
 
+### Detailed Changes Performed (by me)
+
+Below is a concise summary of the repository edits and runtime actions I performed to enable local HTTPS and improve security posture for the dev stack.
+
+- **Files added**:
+    - `frontend/Dockerfile` — containerizes the Angular dev server so `nginx` can reliably proxy to `frontend:4200` inside Docker.
+    - `docker-compose.override.yml` — runs an `nginx-proxy` that binds host ports `80`/`443` and mounts `./certs` and `nginx.conf`.
+
+- **Files modified or added to repo**:
+    - `nginx.conf` — updated to terminate TLS, add security headers (HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, X-XSS-Protection), forward `X-Forwarded-*` headers, and route `/` to the frontend and `/api/*` to backend services.
+    - `backend/*/src/main/resources/application.properties` — added `server.forward-headers-strategy=native` and comments recommending JWT secret via env (no fallback in production).
+    - `backend/*/security/SecurityConfig.java` — tightened CORS: restricted allowed origins to local development origins (e.g. `https://localhost`, `http://localhost`, `https://127.0.0.1`) and restricted allowed headers.
+
+- **Runtime actions performed**:
+    - Generated a self-signed certificate pair placed under `./certs` using the provided PowerShell helper `.\\certs\\generate-self-signed.ps1` (this creates `server.crt` and `server.key`).
+    - Removed an orphan/duplicate `nginx` container that caused a port `443` bind conflict, to allow the `nginx-proxy` in `docker-compose.override.yml` to bind host `443` successfully.
+    - Containerized the frontend (added `frontend` service) instead of relying on a host dev server; this avoids host->container reachability issues and lets `nginx` proxy to `frontend:4200` by service name.
+    - Rebuilt and started the full stack with Docker Compose and tested TLS termination.
+
+- **Verification**:
+    - Start the stack (PowerShell):
+
+```powershell
+.\certs\generate-self-signed.ps1    # (if certs not already present)
+docker-compose up --build -d
+```
+
+    - Quick TLS check (PowerShell / curl):
+
+```powershell
+curl.exe -k -v https://localhost/
+```
+
+    - Expected result: HTTP/1.1 200 OK with the Angular HTML returned and security headers present (e.g. `Strict-Transport-Security`, `X-Frame-Options`, `X-Content-Type-Options`). The `-k` flag bypasses self-signed cert warnings for quick verification.
+
+- **Key recommendations & next steps**:
+    - **Secrets**: Replace any hard-coded JWT fallback secret — require `JWT_SECRET` via environment (or use Docker secrets / a vault) before exposing the stack outside local dev.
+    - **Internal token**: Keep `INTERNAL_TOKEN` secret (use Docker secrets) and rotate it periodically.
+    - **Production TLS**: For production or more realistic certs, consider Traefik with Let's Encrypt (I can add an example `docker-compose.traefik.yml`).
+    - **Trusting the cert**: To avoid browser warnings in local development, import `certs/server.crt` into your OS/browser trust store (only for local testing).
+
+If you want, I can also add a short README snippet showing how to trust `certs/server.crt` on Windows and how to switch to Traefik for Let’s Encrypt.
+
 ### How to test locally (Windows PowerShell)
 
 1) Generate self-signed certificate (requires OpenSSL in PATH):

@@ -10,6 +10,13 @@ services:
     networks:
       - buy-net
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:4200"
+    networks:
+      - buy-net
+
   user-service:
     build: ./backend/user-service
     ports:
@@ -53,6 +60,7 @@ services:
     volumes:
       # persist uploaded media files on the host so they survive container rebuilds
       - ./backend/media-service/uploads:/app/uploads
+
 
 volumes:
   mongo-data:
