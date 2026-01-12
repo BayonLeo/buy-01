@@ -35,8 +35,6 @@ pipeline {
     }
 
     stage('Backend: Build & Test') {
-      // this should run on an agent with Maven/JDK installed (label it e.g. "maven")
-      agent { label 'maven' }
       steps {
         script {
           // run tests for each microservice module
@@ -51,8 +49,6 @@ pipeline {
     }
 
     stage('Frontend: Install & Test') {
-      // agent with Node.js and Chrome (for Karma headless)
-      agent { label 'node' }
       steps {
         dir('frontend') {
           sh 'npm ci'
@@ -64,7 +60,6 @@ pipeline {
     }
 
     stage('Build Docker Images') {
-      agent { label 'docker' }
       steps {
         script {
           // build backend images
@@ -82,7 +77,6 @@ pipeline {
       when {
         expression { return env.DOCKER_REGISTRY?.trim() }
       }
-      agent { label 'docker' }
       steps {
         withCredentials([usernamePassword(credentialsId: DOCKER_CREDS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
           script {
@@ -99,7 +93,6 @@ pipeline {
     }
 
     stage('Deploy') {
-      agent { label 'docker' }
       steps {
         script {
           if (params.ROLLBACK.toBoolean()) {
