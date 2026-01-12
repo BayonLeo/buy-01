@@ -21,10 +21,10 @@ services:
     build: ./backend/user-service
     ports:
       - "8081:8081"
+    env_file:
+      - .env
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/userdb
-      - JWT_SECRET=ChangeThisJWTSecretToASecureValue
-      - INTERNAL_TOKEN=ChangeThisInternalToken
     depends_on:
       - mongo
     networks:
@@ -34,10 +34,10 @@ services:
     build: ./backend/product-service
     ports:
       - "8082:8082"
+    env_file:
+      - .env
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/productdb
-      - JWT_SECRET=ChangeThisJWTSecretToASecureValue
-      - INTERNAL_TOKEN=ChangeThisInternalToken
     depends_on:
       - mongo
     networks:
@@ -47,10 +47,10 @@ services:
     build: ./backend/media-service
     ports:
       - "8083:8083"
+    env_file:
+      - .env
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/mediadb
-      - JWT_SECRET=ChangeThisJWTSecretToASecureValue
-      - INTERNAL_TOKEN=ChangeThisInternalToken
       - PRODUCT_SERVICE_URL=http://product-service:8082
     depends_on:
       - mongo

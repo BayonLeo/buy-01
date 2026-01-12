@@ -37,30 +37,39 @@ pipeline {
     stage('Backend: Build & Test') {
       steps {
         script {
-          echo 'Building and testing user-service...'
-          echo 'Building and testing product-service...'
-          echo 'Building and testing media-service...'
-          echo 'All backend tests passed!'
+          // Run tests for each microservice module
+          sh 'mvn -f backend/user-service/pom.xml -B clean test'
+          sh 'mvn -f backend/product-service/pom.xml -B clean test'
+          sh 'mvn -f backend/media-service/pom.xml -B clean test'
+        }
+      }
+      post {
+        always {
+          // Publish JUnit test results
+          junit '**/target/surefire-reports/*.xml'
         }
       }
     }
 
     stage('Frontend: Install & Test') {
       steps {
-        echo 'Installing frontend dependencies...'
-        echo 'Running frontend tests...'
-        echo 'Frontend tests passed!'
+        dir('frontend') {
+          sh 'npm ci'
+          // Run tests in headless mode for CI
+          sh 'npm run test -- --watch=false --browsers=ChromeHeadless'
+        }
       }
     }
 
     stage('Build Docker Images') {
       steps {
         script {
-          echo "Building Docker image: user-service:${IMAGE_TAG}"
-          echo "Building Docker image: product-service:${IMAGE_TAG}"
-          echo "Building Docker image: media-service:${IMAGE_TAG}"
-          echo "Building Docker image: frontend:${IMAGE_TAG}"
-          echo 'All Docker images built successfully!'
+          // Build backend images
+          sh "docker build -f backend/user-service/Dockerfile -t user-service:${IMAGE_TAG} backend/user-service"
+          sh "docker build -f backend/product-service/Dockerfile -t product-service:${IMAGE_TAG} backend/product-service"
+          sh "docker build -f backend/media-service/Dockerfile -t media-service:${IMAGE_TAG} backend/media-service"
+          // Build frontend image
+          sh "docker build -f frontend/Dockerfile -t frontend:${IMAGE_TAG} frontend"
         }
       }
     }
@@ -89,10 +98,12 @@ pipeline {
         script {
           if (params.ROLLBACK.toBoolean()) {
             echo "Rollback requested for environment ${params.DEPLOY_ENV}"
-            echo 'Executing rollback...'
+            sh "./deploy/rollback2.sh ${params.DEPLOY_ENV} || true"
           } else {
-            echo "Deploying to ${params.DEPLOY_ENV} environment"
-            echo 'Deployment completed successfully!'
+            echo "Deploying to ${params.DEPLOY_ENV}"
+            // Make deploy script executable and run it
+            sh "chmod +x ./deploy/deploy2.sh"
+            sh "./deploy/deploy2.sh ${IMAGE_TAG} ${params.DEPLOY_ENV}"
           }
         }
       }
