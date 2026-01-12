@@ -43,6 +43,7 @@ pipeline {
           echo 'All backend tests passed!'
         }
       }
+    }
 
     stage('Frontend: Install & Test') {
       steps {
