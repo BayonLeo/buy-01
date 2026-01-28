@@ -26,6 +26,9 @@ if [ -f ".env.${ENV}" ]; then
   set -a; . ".env.${ENV}"; set +a
 fi
 
+echo "Cleaning up any existing buy-01-pipeline containers (from previous builds)"
+docker rm -f $(docker ps -aq --filter "name=buy-01-pipeline") 2>/dev/null || true
+
 echo "Bringing down existing stack (if any)"
 docker compose down --remove-orphans || true
 
