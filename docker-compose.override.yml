@@ -1,20 +1,22 @@
 version: '3.8'
-services:
-  # nginx-proxy disabled for CI/CD deployment - enable manually for production
-  # nginx-proxy:
-  #   image: nginx:stable
-  #   restart: unless-stopped
-  #   ports:
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./certs:/etc/ssl/certs:ro
-  #   depends_on:
-  #     - user-service
-  #     - product-service
-  #     - media-service
-  #   networks:
-  #     - buy-net
+
+# nginx-proxy disabled for CI/CD deployment
+# Uncomment the service below to enable nginx reverse proxy for production
+# services:
+#   nginx-proxy:
+#     image: nginx:stable
+#     restart: unless-stopped
+#     ports:
+#       - "443:443"
+#     volumes:
+#       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#       - ./certs:/etc/ssl/certs:ro
+#     depends_on:
+#       - user-service
+#       - product-service
+#       - media-service
+#     networks:
+#       - buy-net
 
 networks:
   buy-net:
