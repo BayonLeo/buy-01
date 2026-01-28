@@ -56,7 +56,7 @@ pipeline {
         dir('frontend') {
           sh 'npm ci'
           // Run tests in headless mode for CI
-          sh 'npm run test -- --watch=false --browsers=ChromeHeadless'
+          sh 'npm test -- --no-watch --browsers=ChromeHeadless'
         }
       }
     }
