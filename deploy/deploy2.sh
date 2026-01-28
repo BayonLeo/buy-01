@@ -30,14 +30,14 @@ echo "Cleaning up any existing buy-01-pipeline containers (from previous builds)
 docker rm -f $(docker ps -aq --filter "name=buy-01-pipeline") 2>/dev/null || true
 
 echo "Bringing down existing stack (if any)"
-docker compose down --remove-orphans || true
+docker-compose down --remove-orphans || true
 
-echo "Starting stack with docker compose (build if necessary)"
-docker compose up -d --build
+echo "Starting stack with docker-compose (build if necessary)"
+docker-compose up -d --build
 
 # Save the tag for possible rollbacks
 mkdir -p deploy
 echo "${TAG}" > deploy/previous_tag.txt
 
 echo "Deployment complete"
-docker compose ps
+docker-compose ps
